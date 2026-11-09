@@ -3,7 +3,7 @@ const router = express.Router();
 const usuarioController = require('../controllers/usuarioController.js')
 
 // Descomente pra testar se o usuário routes ta funfando 
-// console.log('🔥 FICHEIRO USUARIOROUTES CARREGADO COM SUCESSO!');
+// console.log('FICHEIRO USUARIOROUTES CARREGADO COM SUCESSO!');
 // dica: pra matar os processos e reiniciar o servidor, use npx kill-port 5000 
 
 // Exemplo no teu arquivo de rotas de utilizador:
