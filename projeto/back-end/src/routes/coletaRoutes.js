@@ -17,6 +17,7 @@ router.get('/minhas-coletas', autorizar('CLIENTE'), coletaController.listarMinha
 
 // --- ROTAS DO MOTORISTA ---
 router.get('/pendentes', autorizar('MOTORISTA'), coletaController.listarColetasPendentes);
+router.get('/historico', autorizar('MOTORISTA'), coletaController.listarHistoricoMotorista);
 router.put('/:id/coletar', autorizar('MOTORISTA'), coletaController.confirmarColeta);
 module.exports = router;
 

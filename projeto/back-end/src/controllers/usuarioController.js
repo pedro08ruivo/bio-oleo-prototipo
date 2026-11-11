@@ -33,11 +33,12 @@ exports.signup = async (req, res) => {
       return res.status(400).json({ error: 'Nome, email, CPF e senha são obrigatórios.' });
     }
 
-    // 2. Validação do Perfil (Role) - Permite apenas os 3 perfis do sistema
-    const perfisPermitidos = ['CLIENTE', 'MOTORISTA', 'GESTOR'];
-    const perfilDefinido = role && perfisPermitidos.includes(role.toUpperCase()) 
-      ? role.toUpperCase() 
-      : 'CLIENTE';
+    // O cadastro público só pode criar contas de Cliente ou Motorista.
+    // Contas de Gestor devem ser provisionadas por um administrador.
+    const perfilDefinido = role ? role.toUpperCase() : 'CLIENTE';
+    if (!['CLIENTE', 'MOTORISTA'].includes(perfilDefinido)) {
+      return res.status(403).json({ error: 'Cadastro público permitido apenas para Cliente e Motorista.' });
+    }
 
     // 3. Verifica se o utilizador já existe (por Email ou CPF)
     const usuarioExistente = await prisma.usuario.findFirst({
@@ -88,15 +89,28 @@ exports.signup = async (req, res) => {
 // AUTENTICAÇÃO (LOGIN)
 exports.login = async (req, res) => {
   try {
-    const { email, senha } = req.body;
+    const { cpf, senha } = req.body;
 
-    if (!email || !senha) {
-      return res.status(400).json({ error: 'Email e senha são obrigatórios.' });
+    if (!cpf || !senha) {
+      return res.status(400).json({ error: 'CPF e senha são obrigatórios.' });
     }
 
-    // 1. Procura o utilizador no banco
-    const usuario = await prisma.usuario.findUnique({
-      where: { email }
+    // Aceita CPF formatado ou apenas os dígitos, compatível com cadastros existentes.
+    const cpfInformado = String(cpf).trim();
+    const cpfNumerico = cpfInformado.replace(/\D/g, '');
+    const cpfFormatado = cpfNumerico.length === 11
+      ? cpfNumerico.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
+      : cpfInformado;
+
+    // 1. Procura o utilizador pelo CPF
+    const usuario = await prisma.usuario.findFirst({
+      where: {
+        OR: [
+          { cpf: cpfInformado },
+          { cpf: cpfNumerico },
+          { cpf: cpfFormatado }
+        ]
+      }
     });
 
     if (!usuario) {

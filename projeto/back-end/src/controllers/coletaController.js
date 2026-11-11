@@ -74,6 +74,27 @@ exports.listarColetasPendentes = async (req, res) => {
     return res.status(500).json({ error: 'Erro ao buscar coletas pendentes: ' + error.message });
   }
 };
+
+// MOTORISTA: Histórico de coletas concluídas pelo próprio motorista
+exports.listarHistoricoMotorista = async (req, res) => {
+  try {
+    const historico = await prisma.coleta.findMany({
+      where: {
+        motoristaId: req.usuario.id,
+        status: { in: ['COLETADO', 'PAGO'] }
+      },
+      include: {
+        cliente: { select: { nome: true } }
+      },
+      orderBy: { dataColeta: 'desc' }
+    });
+
+    return res.status(200).json(historico);
+  } catch (error) {
+    return res.status(500).json({ error: 'Erro ao buscar histórico de coletas: ' + error.message });
+  }
+};
+
 // Motorista: Confirmar recolha no local (Validação da garrafa PET)
 exports.confirmarColeta = async (req, res) => {
   try {
